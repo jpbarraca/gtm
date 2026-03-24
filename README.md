@@ -1,1 +1,1 @@
-# gtm
+# Guitarix Tone Matcher
