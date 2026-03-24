@@ -1,16 +1,16 @@
-⚡ Guitarix Tone Matcher
+# ⚡ Guitarix Tone Matcher
 
 A simple vibe coded tool to dial in your virtual rig.
 
 🎸 [Try the Live App Here](https://jpbarraca.github.io/gtm/)!
 
-🤘 What is this?
+## 🤘 What is this?
 
 Guitarix Tone Matcher is a standalone Progressive Web App (PWA) that acts as your personal AI guitar tech. By leveraging Google's Gemini AI, it translates your target guitar tone (e.g., "Tony Iommi", "Shoegaze", "Texas Blues") into a complete, ready-to-dial signal chain specifically designed for Guitarix, the open-source Linux virtual amplifier. It was developed as a tool to get a first approximation to a tone. YMMV!
 
 Since this is a Vibe Coded tool, it prioritizes a slick, rock-inspired interface and runs entirely in your browser—no backend servers or databases required!
 
-✨ Features
+## ✨ Features
 
 AI Rig Generation: Maps real-world analog gear to Guitarix's native digital modules.
 
@@ -22,7 +22,7 @@ NAM Fallback: If Guitarix native amps aren't enough for a highly specific modern
 
 Visual Pedalboard: See your signal chain laid out horizontally with dynamic, rotating knobs indicating exact parameter values.
 
-⚙️ Basic Usage
+## ⚙️ Basic Usage
 
 Get an API Key: You will need a free Google Gemini API Key. You can grab one from Google AI Studio.
 
@@ -36,7 +36,7 @@ Engage: Hit the "Engage" button. The AI will build your custom pedalboard and pr
 
 Save to Vault: Love the tone? Click 💾 Save Rig to keep it in your local Tone Vault for future reference.
 
-🔒 Privacy Disclaimer
+## 🔒 Privacy Disclaimer
 
 This app is a purely client-side PWA.
 
