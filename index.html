@@ -4,19 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#09090b">
-    <meta name="description" content="A standalone PWA for generating Guitarix Tone setups using Gemini AI.">
+    <meta name="description" content="A hybrid PWA for generating Guitarix Tone setups using Gemini AI.">
     <title>Guitarix Tone Matcher (PWA)</title>
-    <!-- PWA Manifest Link (You can create a manifest.json file alongside this to make it fully installable) -->
+    <!-- PWA Manifest Link -->
     <link rel="manifest" href="manifest.json">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Custom gritty scrollbar for the rock vibe - Updated for horizontal scrolling */
+        /* Custom gritty scrollbar for the rock vibe */
         ::-webkit-scrollbar { width: 8px; height: 12px; }
         ::-webkit-scrollbar-track { background: #18181b; border-radius: 6px; }
         ::-webkit-scrollbar-thumb { background: #dc2626; border-radius: 6px; border: 3px solid #18181b; }
         ::-webkit-scrollbar-thumb:hover { background: #b91c1c; }
-        
-        /* Hide scrollbar for a cleaner look when not scrolling, optional */
         .hide-scroll-if-empty:empty { display: none; }
     </style>
 </head>
@@ -26,7 +24,7 @@
         <header class="text-center pt-4 relative">
             <!-- Top Right Action Area -->
             <div class="absolute right-0 top-0 flex items-center gap-3 mt-2">
-                <div class="hidden md:block bg-zinc-900 border border-zinc-800 text-[10px] uppercase font-bold tracking-widest px-2 py-1.5 rounded text-zinc-500">Standalone PWA Mode</div>
+                <div id="modeBadge" class="hidden md:block bg-zinc-900 border border-zinc-800 text-[10px] uppercase font-bold tracking-widest px-2 py-1.5 rounded text-zinc-500 transition-colors">Checking Backend...</div>
                 <button id="settingsBtn" class="bg-zinc-900 border border-zinc-700 hover:border-zinc-500 text-zinc-300 hover:text-white hover:bg-zinc-800 px-3 py-1.5 rounded transition-colors flex items-center gap-2 text-xs font-black uppercase tracking-widest shadow-lg active:translate-y-px">
                     <span>⚙️ Settings</span>
                 </button>
@@ -40,13 +38,12 @@
 
         <!-- Top Controls Row -->
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            <!-- Generator Form (Takes up 3/4 of the top row) -->
+            <!-- Generator Form -->
             <div class="lg:col-span-3 bg-zinc-900 p-6 rounded-sm shadow-[0_10px_30px_rgba(0,0,0,0.8)] border-t-4 border-t-red-600 border-x border-b border-zinc-800">
                 <h2 class="text-xl font-black mb-4 border-b-2 border-zinc-800 pb-2 text-white uppercase tracking-widest flex items-center gap-2">
                     <span class="w-3 h-3 rounded-full bg-red-600 shadow-[0_0_8px_#dc2626]"></span> Rig Inputs
                 </h2>
                 
-                <!-- Horizontal Form Layout -->
                 <form id="toneForm" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                     <div>
                         <label class="block text-[11px] font-bold text-zinc-500 mb-1 uppercase tracking-widest">Guitar Type</label>
@@ -88,10 +85,10 @@
                 <div id="errorMessage" class="hidden mt-4 p-3 bg-zinc-950 text-red-500 rounded-sm text-sm border-l-4 border-red-600 font-mono font-bold uppercase shadow-inner"></div>
             </div>
 
-            <!-- Saved Tones Vault (Takes up 1/4 of the top row) -->
+            <!-- Saved Tones Vault -->
             <div class="lg:col-span-1 bg-zinc-900 p-6 rounded-sm shadow-[0_10px_30px_rgba(0,0,0,0.8)] border-t-4 border-t-zinc-500 border-x border-b border-zinc-800 flex flex-col">
                 <h2 class="text-xl font-black mb-4 border-b-2 border-zinc-800 pb-2 text-white uppercase tracking-widest flex items-center gap-2">
-                    <span class="w-3 h-3 rounded-full bg-zinc-500 shadow-[0_0_8px_#71717a]"></span> Tone Vault <span class="text-[9px] font-normal text-zinc-600 ml-auto">(Local)</span>
+                    <span class="w-3 h-3 rounded-full bg-zinc-500 shadow-[0_0_8px_#71717a]"></span> Tone Vault <span id="vaultSourceText" class="text-[9px] font-normal text-zinc-600 ml-auto"></span>
                 </h2>
                 
                 <div class="mb-3 relative">
@@ -100,15 +97,13 @@
                     <button id="searchBtn" class="absolute right-2 top-2 text-zinc-500 hover:text-white">🔍</button>
                 </div>
                 
-                <!-- Constrained height to align with the form -->
                 <div id="vaultList" class="space-y-2 flex-grow overflow-y-auto max-h-24 pr-2 custom-scrollbar">
-                    <!-- Search results go here -->
                     <div class="text-center text-zinc-600 text-xs py-4 font-bold uppercase tracking-widest">Loading vault...</div>
                 </div>
             </div>
         </div>
 
-        <!-- Results Area (Full Width) -->
+        <!-- Results Area -->
         <div class="w-full flex flex-col">
             <!-- Loading State -->
             <div id="loadingIndicator" class="hidden flex flex-col items-center justify-center flex-grow min-h-[400px] bg-zinc-900 rounded-sm shadow-2xl border border-zinc-800">
@@ -122,7 +117,6 @@
             <!-- Results State -->
             <div id="resultsArea" class="hidden flex-col w-full">
                 <div class="bg-zinc-900 p-6 rounded-sm shadow-2xl mb-8 border border-zinc-800 relative overflow-hidden group">
-                    <!-- Background Pattern -->
                     <div class="absolute inset-0 opacity-5" style="background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 4px 4px;"></div>
                     
                     <div class="relative z-10 flex justify-between items-start">
@@ -132,7 +126,6 @@
                             <p id="explanationText" class="text-zinc-300 leading-relaxed font-medium text-lg border-l-2 border-red-600 pl-4"></p>
                         </div>
                         
-                        <!-- Save Button -->
                         <button id="saveToneBtn" class="flex-shrink-0 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-600 px-4 py-2 rounded-sm font-black text-xs uppercase tracking-widest transition-colors flex items-center gap-2 shadow-lg mt-2 md:mt-0">
                             💾 Save Rig
                         </button>
@@ -159,7 +152,6 @@
                 <div class="w-full relative bg-zinc-900/50 p-6 rounded-sm border border-zinc-800/80 shadow-inner">
                     <div class="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-zinc-900 to-transparent z-10 pointer-events-none hidden md:block"></div>
                     
-                    <!-- flex-row layout with overflow-x-auto to make a single line -->
                     <div id="pedalGrid" class="flex flex-row overflow-x-auto gap-6 pb-4 pt-2 snap-x scroll-smooth items-stretch w-full custom-scrollbar">
                         <!-- Pedals injected by JS -->
                     </div>
@@ -175,7 +167,7 @@
             </div>
         </div>
 
-        <!-- Tone Tuning Considerations (Dynamic Bottom Area) -->
+        <!-- Tone Tuning Considerations -->
         <div id="considerationsArea" class="hidden bg-zinc-900 p-8 rounded-sm shadow-[0_10px_30px_rgba(0,0,0,0.8)] border-t-4 border-t-amber-500 border-x border-b border-zinc-800 relative overflow-hidden">
             <div class="absolute inset-0 opacity-5" style="background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 4px 4px;"></div>
             <div class="relative z-10">
@@ -188,10 +180,10 @@
             </div>
         </div>
 
-        <!-- Disclaimer Footer -->
-        <footer class="text-center pt-6 pb-2 border-t border-zinc-800/50 mt-4">
+        <!-- Disclaimer Footer (Visible in Standalone Mode only) -->
+        <footer id="pwaDisclaimer" class="hidden text-center pt-6 pb-2 border-t border-zinc-800/50 mt-4">
             <p class="text-zinc-600 text-[10px] uppercase tracking-widest font-bold leading-relaxed">
-                <span class="text-amber-500/70">🔒 Privacy Disclaimer:</span> Your API Key and Tone Vault are stored locally in your browser. No data is shared with any third party, except for the prompts sent directly to Google as the AI model provider.
+                <span class="text-amber-500/70">🔒 Privacy Disclaimer:</span> Running in Standalone Mode. Your API Key and Tone Vault are stored locally in your browser. No data is shared with any third party, except for the prompts sent directly to Google as the AI model provider.
             </p>
         </footer>
     </div>
@@ -201,14 +193,23 @@
         <div class="bg-zinc-900 p-8 rounded-sm shadow-[0_10px_40px_rgba(0,0,0,1)] border-t-4 border-t-red-600 border-x border-b border-zinc-800 w-full max-w-md relative">
             <button id="closeModalBtn" class="absolute top-4 right-4 text-zinc-500 hover:text-white text-xl transition-colors">✖</button>
             <h2 class="text-2xl font-black mb-6 border-b-2 border-zinc-800 pb-2 text-white uppercase tracking-widest flex items-center gap-2">
-                <span class="w-3 h-3 rounded-full bg-red-600 shadow-[0_0_8px_#dc2626]"></span> API Settings
+                <span class="w-3 h-3 rounded-full bg-red-600 shadow-[0_0_8px_#dc2626]"></span> App Settings
             </h2>
             <div class="space-y-6">
+                <!-- Backend Configuration -->
                 <div>
-                    <label class="block text-xs font-bold text-zinc-400 mb-2 uppercase tracking-widest">Gemini API Key</label>
-                    <input type="password" id="apiKey" required placeholder="Paste your key here..." 
+                    <label class="block text-xs font-bold text-zinc-400 mb-2 uppercase tracking-widest">Backend URL (Optional)</label>
+                    <input type="text" id="backendUrlInput" placeholder="e.g. http://127.0.0.1:5000" 
                            class="w-full px-4 py-3 bg-zinc-950 border border-zinc-700 rounded-sm text-zinc-200 font-bold focus:outline-none focus:ring-2 focus:ring-red-600 placeholder-zinc-700 shadow-inner">
-                    <p class="text-[10px] text-zinc-500 mt-2">Your key is stored locally in your browser and is never sent to any server except Google's API.</p>
+                    <p class="text-[10px] text-zinc-500 mt-2">Leave blank to auto-detect. Explicitly link to your Flask server if it is running on another domain or local port.</p>
+                </div>
+
+                <!-- API Key Section (Only visible in standalone mode) -->
+                <div id="apiKeyContainer" class="hidden">
+                    <label class="block text-xs font-bold text-zinc-400 mb-2 uppercase tracking-widest">Gemini API Key</label>
+                    <input type="password" id="apiKey" placeholder="Enter API Key..." 
+                           class="w-full px-4 py-3 bg-zinc-950 border border-zinc-700 rounded-sm text-zinc-200 font-bold focus:outline-none focus:ring-2 focus:ring-red-600 placeholder-zinc-700 shadow-inner">
+                    <p id="apiKeyHint" class="text-[10px] text-zinc-500 mt-2">Required for Standalone PWA. Key is stored locally in your browser and goes directly to Google.</p>
                 </div>
 
                 <div>
@@ -227,7 +228,10 @@
     </div>
 
     <script>
-        // Global state
+        // Global Hybrid State
+        let isStandaloneMode = true; // Assumes true until backend pings back ok
+        let configuredBackendUrl = (localStorage.getItem('guitarix_backend_url') || '').replace(/\/$/, '');
+        let activeBackendUrl = configuredBackendUrl; 
         let currentToneData = null;
         let currentInputParams = null;
 
@@ -248,121 +252,180 @@
         const searchBtn = document.getElementById('searchBtn');
         const vaultList = document.getElementById('vaultList');
         
-        // Modal UI Elements
+        // Modal & Hybrid UI Elements
+        const modeBadge = document.getElementById('modeBadge');
+        const vaultSourceText = document.getElementById('vaultSourceText');
+        const pwaDisclaimer = document.getElementById('pwaDisclaimer');
         const settingsBtn = document.getElementById('settingsBtn');
         const settingsModal = document.getElementById('settingsModal');
         const closeModalBtn = document.getElementById('closeModalBtn');
         const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+        const backendUrlInput = document.getElementById('backendUrlInput');
+        const apiKeyContainer = document.getElementById('apiKeyContainer');
         const apiKeyInput = document.getElementById('apiKey');
+        const apiKeyHint = document.getElementById('apiKeyHint');
         const aiModelSelect = document.getElementById('aiModel');
-        
-        // NAM UI Elements
         const namSuggestionArea = document.getElementById('namSuggestionArea');
         const namModelName = document.getElementById('namModelName');
         const namReason = document.getElementById('namReason');
 
-        // Initial Load
-        loadConfig();
-        fetchVault();
+        // --- Hybrid Initialization Logic ---
+        async function initApp() {
+            try {
+                // Test configured backend URL or relative path
+                const testUrl = activeBackendUrl ? `${activeBackendUrl}/api/status` : '/api/status';
+                const response = await fetch(testUrl, { cache: 'no-cache' });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.status === 'ok') isStandaloneMode = false;
+                } 
+                
+                // If relative path failed/absent, try default localhost fallback
+                if (isStandaloneMode && !configuredBackendUrl) {
+                    const fallbackUrl = 'http://127.0.0.1:5000/api/status';
+                    const fallbackRes = await fetch(fallbackUrl, { cache: 'no-cache' });
+                    if (fallbackRes.ok) {
+                        const data = await fallbackRes.json();
+                        if (data.status === 'ok') {
+                            isStandaloneMode = false;
+                            activeBackendUrl = 'http://127.0.0.1:5000';
+                        }
+                    }
+                }
+            } catch (e) {
+                console.log("Backend check failed, running in Standalone PWA mode.", e);
+            }
+
+            // Update UI based on detected mode
+            if (isStandaloneMode) {
+                modeBadge.textContent = 'Standalone PWA Mode';
+                modeBadge.classList.replace('text-zinc-500', 'text-amber-500');
+                modeBadge.classList.remove('hidden');
+                vaultSourceText.textContent = '(Local)';
+                pwaDisclaimer.classList.remove('hidden');
+                apiKeyContainer.classList.remove('hidden');
+                apiKeyInput.setAttribute('required', 'required');
+            } else {
+                modeBadge.textContent = 'Server Mode (Flask)';
+                modeBadge.classList.replace('text-zinc-500', 'text-green-500');
+                modeBadge.classList.remove('hidden');
+                vaultSourceText.textContent = '(Server Database)';
+                apiKeyContainer.classList.add('hidden');
+                apiKeyInput.removeAttribute('required');
+                apiKeyInput.value = ''; // Ensure we rely on backend's config.json
+            }
+
+            loadConfig();
+            fetchVault();
+        }
+
+        // Initialize App on Script Load
+        initApp();
 
         // --- Settings Modal Logic ---
         function loadConfig() {
-            const savedKey = localStorage.getItem('guitarix_api_key');
-            if (savedKey) {
-                apiKeyInput.value = savedKey;
-                updateModelList(); // Fetch dynamic models using saved key
-            } else {
-                const savedModel = localStorage.getItem('guitarix_ai_model');
-                if (savedModel) aiModelSelect.value = savedModel;
+            if (configuredBackendUrl) {
+                backendUrlInput.value = configuredBackendUrl;
             }
+
+            if (isStandaloneMode) {
+                const savedKey = localStorage.getItem('guitarix_hybrid_api_key');
+                if (savedKey) apiKeyInput.value = savedKey;
+            }
+            updateModelList();
         }
         
         async function updateModelList() {
             const apiKey = apiKeyInput.value.trim();
-            if (!apiKey) {
-                // Revert to default hardcoded options if key is empty
-                const savedModel = localStorage.getItem('guitarix_ai_model') || 'gemini-1.5-pro';
-                aiModelSelect.innerHTML = `
-                    <option value="gemini-1.5-pro" ${savedModel === 'gemini-1.5-pro' ? 'selected' : ''}>gemini-1.5-pro (Recommended)</option>
-                    <option value="gemini-2.5-flash" ${savedModel === 'gemini-2.5-flash' ? 'selected' : ''}>gemini-2.5-flash (Faster)</option>
-                `;
-                return;
-            }
+            const savedModel = localStorage.getItem('guitarix_hybrid_ai_model') || 'gemini-1.5-pro';
 
-            aiModelSelect.innerHTML = '<option value="">Loading models from API...</option>';
+            aiModelSelect.innerHTML = '<option value="">Loading models...</option>';
             
             try {
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
-                if (!response.ok) {
-                    throw new Error("Invalid API Key or network issue");
-                }
-                const data = await response.json();
-                
-                aiModelSelect.innerHTML = '';
-                const savedModel = localStorage.getItem('guitarix_ai_model') || 'gemini-1.5-pro';
-
-                // Filter for models supporting content generation
-                const models = data.models.filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent'));
-                
-                models.forEach(m => {
-                    const cleanName = m.name.replace('models/', '');
-                    const option = document.createElement('option');
-                    option.value = cleanName;
-                    option.textContent = m.displayName || cleanName;
-                    
-                    if (cleanName === savedModel) {
-                        option.selected = true;
+                if (isStandaloneMode) {
+                    if (!apiKey) {
+                        aiModelSelect.innerHTML = `
+                            <option value="gemini-1.5-pro" ${savedModel === 'gemini-1.5-pro' ? 'selected' : ''}>gemini-1.5-pro (Recommended)</option>
+                            <option value="gemini-2.5-flash" ${savedModel === 'gemini-2.5-flash' ? 'selected' : ''}>gemini-2.5-flash (Faster)</option>
+                        `;
+                        return;
                     }
                     
-                    aiModelSelect.appendChild(option);
-                });
-                
-                // If saved model wasn't found in the live list, default to the first one available
-                if (!Array.from(aiModelSelect.options).some(opt => opt.selected) && aiModelSelect.options.length > 0) {
-                    aiModelSelect.options[0].selected = true;
-                }
-
-                if (models.length === 0) {
-                    throw new Error("No valid generateContent models found.");
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+                    if (!response.ok) throw new Error("Invalid API Key");
+                    
+                    const data = await response.json();
+                    populateModelDropdown(data.models, savedModel, m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent'), m => m.name.replace('models/', ''), m => m.displayName);
+                } else {
+                    const response = await fetch(`${activeBackendUrl}/models`);
+                    if (!response.ok) throw new Error("Backend error");
+                    
+                    const models = await response.json();
+                    populateModelDropdown(models, savedModel, m => true, m => m.name, m => m.display_name);
                 }
             } catch (error) {
                 console.error("Failed to load models:", error);
-                // Revert to fallbacks on error (e.g. invalid key)
-                const savedModel = localStorage.getItem('guitarix_ai_model') || 'gemini-1.5-pro';
                 aiModelSelect.innerHTML = `
                     <option value="gemini-1.5-pro" ${savedModel === 'gemini-1.5-pro' ? 'selected' : ''}>gemini-1.5-pro (Recommended)</option>
                     <option value="gemini-2.5-flash" ${savedModel === 'gemini-2.5-flash' ? 'selected' : ''}>gemini-2.5-flash (Faster)</option>
                 `;
             }
         }
+
+        function populateModelDropdown(sourceArray, savedModel, filterFn, valueFn, displayFn) {
+            aiModelSelect.innerHTML = '';
+            const filtered = sourceArray.filter(filterFn);
+            if (filtered.length === 0) throw new Error("No models available");
+
+            filtered.forEach(m => {
+                const val = valueFn(m);
+                const option = document.createElement('option');
+                option.value = val;
+                option.textContent = displayFn(m) || val;
+                if (val === savedModel) option.selected = true;
+                aiModelSelect.appendChild(option);
+            });
+
+            if (!Array.from(aiModelSelect.options).some(opt => opt.selected)) {
+                aiModelSelect.options[0].selected = true;
+            }
+        }
         
-        // Listeners for dynamic fetching when API Key is modified
         apiKeyInput.addEventListener('blur', updateModelList);
         apiKeyInput.addEventListener('change', updateModelList);
 
         function closeAndSaveModal() {
             settingsModal.classList.add('hidden');
-            localStorage.setItem('guitarix_api_key', apiKeyInput.value.trim());
-            // Only overwrite saved model if we currently have a valid selection loaded
-            if (aiModelSelect.value) {
-                localStorage.setItem('guitarix_ai_model', aiModelSelect.value);
+            
+            const newBackendUrl = backendUrlInput.value.trim().replace(/\/$/, '');
+            const savedBackendUrl = localStorage.getItem('guitarix_backend_url') || '';
+            
+            if (newBackendUrl !== savedBackendUrl) {
+                localStorage.setItem('guitarix_backend_url', newBackendUrl);
+                window.location.reload(); // Hard reload to cleanly re-init hybrid state
+                return;
             }
-            // Hide error message if they just saved a key
-            if (apiKeyInput.value.trim()) errorMessage.classList.add('hidden');
+
+            if (isStandaloneMode) {
+                localStorage.setItem('guitarix_hybrid_api_key', apiKeyInput.value.trim());
+                if (apiKeyInput.value.trim()) errorMessage.classList.add('hidden');
+            }
+            
+            if (aiModelSelect.value) {
+                localStorage.setItem('guitarix_hybrid_ai_model', aiModelSelect.value);
+            }
         }
 
         settingsBtn.addEventListener('click', () => settingsModal.classList.remove('hidden'));
         closeModalBtn.addEventListener('click', closeAndSaveModal);
         saveSettingsBtn.addEventListener('click', closeAndSaveModal);
-        
-        // Close modal if clicking outside the box
         settingsModal.addEventListener('click', (e) => {
             if (e.target === settingsModal) closeAndSaveModal();
         });
 
         // --- Core Render Logic ---
         function renderTone(data) {
-            // Engineer's Notes
             explanationText.textContent = data.explanation || 'No explanation provided.';
             
             if (data.recommended_pickup) {
@@ -372,7 +435,6 @@
                 pickupBadge.classList.add('hidden');
             }
 
-            // NAM Fallback Suggestion
             if (data.nam_model_suggestion && data.nam_model_suggestion.needed) {
                 namModelName.textContent = `Search Tone3000/ToneHunt for: "${data.nam_model_suggestion.model_name}"`;
                 namReason.textContent = data.nam_model_suggestion.reason;
@@ -381,7 +443,6 @@
                 namSuggestionArea.classList.add('hidden');
             }
             
-            // Build Pedals (Horizontal Single Line Flow with Reduced Width & Knobs)
             pedalGrid.innerHTML = '';
             if (data.chain && Array.isArray(data.chain)) {
                 data.chain.forEach((pedal, index) => {
@@ -398,7 +459,6 @@
                         settingsHtml = '<div class="flex flex-wrap justify-center items-start gap-x-2 gap-y-4 mt-3">';
                         
                         for (const [key, val] of Object.entries(pedal.settings)) {
-                            // Knob Rotation Logic
                             let rotation = 0; 
                             const strVal = String(val).toLowerCase();
                             const numMatch = strVal.match(/-?[\d.]+/);
@@ -446,7 +506,6 @@
                     }
 
                     const stepNum = `<div class="absolute -left-4 -top-4 text-7xl font-black text-zinc-700/20 pointer-events-none select-none">${index + 1}</div>`;
-
                     const arrow = index !== data.chain.length - 1 
                         ? `<div class="absolute -right-4 top-1/2 -translate-y-1/2 text-zinc-600 opacity-30 text-2xl font-black select-none pointer-events-none z-20">❯</div>` 
                         : '';
@@ -493,15 +552,15 @@
             resultsArea.classList.add('flex');
         }
 
-        // --- Generate Tone Submission (Direct to Gemini API) ---
+        // --- Hybrid Generate Tone Submission ---
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             
             const apiKey = apiKeyInput.value.trim();
-            if (!apiKey) {
+            if (isStandaloneMode && !apiKey) {
                 errorMessage.textContent = "API Key missing. Please configure your key in Settings ⚙️.";
                 errorMessage.classList.remove('hidden');
-                settingsModal.classList.remove('hidden'); // Prompt user to add key
+                settingsModal.classList.remove('hidden');
                 return;
             }
 
@@ -509,7 +568,7 @@
                 guitar_type: document.getElementById('guitarType').value,
                 pickup_type: document.getElementById('pickupType').value,
                 music_style: document.getElementById('musicStyle').value,
-                model: document.getElementById('aiModel').value || "gemini-1.5-pro"
+                model: document.getElementById('aiModel').value || "gemini-1.5-pro",
             };
 
             // Loading UI
@@ -525,69 +584,81 @@
             submitBtn.classList.add('opacity-75', 'cursor-wait');
 
             try {
-                const promptText = `
-                You are a master-level guitar tone architect, audio engineer, and Guitarix (Linux) expert.
+                let parsedData;
 
-                Your task is to recreate the target tone: "${currentInputParams.music_style}".
-                The user is playing a ${currentInputParams.guitar_type} equipped with ${currentInputParams.pickup_type} pickups.
+                if (isStandaloneMode) {
+                    // --- Standalone Mode API Call (With strict Anti-Hallucination rules) ---
+                    const promptText = `
+                    You are a master-level guitar tone architect, audio engineer, and Guitarix (Linux) expert.
 
-                Follow this systematic process (Research -> Apply -> Validate) before generating the final JSON:
-                1. RESEARCH: Identify the core components of "${currentInputParams.music_style}".
-                2. APPLY: Map these real-world components to their absolute closest equivalents in Guitarix. 
-                3. NAM FALLBACK: Critically evaluate if Guitarix's native amps are sufficient. If the tone requires a very specific or complex amplifier that Guitarix lacks, you MUST suggest using a NAM (Neural Amp Modeler) profile from Tone3000 / ToneHunt instead of a Guitarix Amp head.
-                4. VALIDATE & TWEAK: Compensate for the user's specific guitar configuration.
+                    Your task is to recreate the target tone: "${currentInputParams.music_style}".
+                    The user is playing a ${currentInputParams.guitar_type} equipped with ${currentInputParams.pickup_type} pickups.
 
-                You MUST return the output ONLY as a valid JSON object with the following strict structure:
-                {
-                    "recommended_pickup": "The optimal pickup selection (e.g., Neck, Bridge, Middle) for this specific tone.",
-                    "explanation": "A detailed explanation of how you adapted the rig.",
-                    "nam_model_suggestion": {
-                        "needed": true or false,
-                        "model_name": "If needed, the exact NAM model search query to look for on Tone3000/ToneHunt. Leave empty if false.",
-                        "reason": "Why a NAM model is recommended over native Guitarix amps."
-                    },
-                    "chain": [
-                        {
-                            "name": "Exact Guitarix module name (e.g., GxFuzz, JCM800 Head, GxCabinet)",
-                            "category": "Pre-FX, Drive, Amp, Cab, Modulation, or Time",
-                            "active": true,
-                            "settings": {
-                                "Param1": "Value1 (e.g., 6.5)",
-                                "Param2": "Value2"
+                    Follow this systematic process (Research -> Apply -> Validate) before generating the final JSON:
+                    1. RESEARCH: Identify the core components of "${currentInputParams.music_style}".
+                    2. APPLY: Map these real-world components to their absolute closest equivalents in Guitarix. You MUST ONLY use real, existing Guitarix plugin names (e.g., GxTubeScreamer, GxFuzz, GxDistortion, GxCompressor, GxChorus, GxDelay, GxReverb, Tonestack, GxCabinet, GxAmplifier-X, JCM800 Preamp). DO NOT invent or hallucinate plugin names. If a specific boutique pedal doesn't exist, use the closest generic Gx equivalent.
+                    3. NAM FALLBACK: Critically evaluate if Guitarix's native amps are sufficient. If the tone requires a very specific or complex amplifier that Guitarix lacks, you MUST suggest using a NAM (Neural Amp Modeler) profile from Tone3000 / ToneHunt instead of a Guitarix Amp head.
+                    4. VALIDATE & TWEAK: Compensate for the user's specific guitar configuration.
+
+                    You MUST return the output ONLY as a valid JSON object with the following strict structure:
+                    {
+                        "recommended_pickup": "The optimal pickup selection (e.g., Neck, Bridge, Middle) for this specific tone.",
+                        "explanation": "A detailed explanation of how you adapted the rig.",
+                        "nam_model_suggestion": {
+                            "needed": true or false,
+                            "model_name": "If needed, the exact NAM model search query to look for on Tone3000/ToneHunt. Leave empty if false.",
+                            "reason": "Why a NAM model is recommended over native Guitarix amps."
+                        },
+                        "chain": [
+                            {
+                                "name": "Exact Guitarix module name (e.g., GxFuzz, JCM800 Head, GxCabinet)",
+                                "category": "Pre-FX, Drive, Amp, Cab, Modulation, or Time",
+                                "active": true,
+                                "settings": {
+                                    "Param1": "Value1 (e.g., 6.5)",
+                                    "Param2": "Value2"
+                                }
                             }
-                        }
-                    ],
-                    "tuning_considerations": [
-                        {
-                            "title": "A short, punchy title for the tip",
-                            "icon": "A single relevant emoji",
-                            "description": "A detailed 2-sentence explanation of a playing technique, EQ trick, or gain staging tip."
-                        }
-                    ]
-                }
-                Ensure the JSON is perfectly formatted. Include 5 to 8 essential modules in the chain in sequential signal flow order, and provide exactly 3 tuning considerations.`;
+                        ],
+                        "tuning_considerations": [
+                            {
+                                "title": "A short, punchy title for the tip",
+                                "icon": "A single relevant emoji",
+                                "description": "A detailed 2-sentence explanation of a playing technique, EQ trick, or gain staging tip."
+                            }
+                        ]
+                    }
+                    Ensure the JSON is perfectly formatted. Include 5 to 8 essential modules in the chain in sequential signal flow order, and provide exactly 3 tuning considerations.`;
 
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/${currentInputParams.model}:generateContent?key=${apiKey}`;
-                
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: promptText }] }],
-                        generationConfig: { responseMimeType: "application/json" }
-                    })
-                });
-                
-                const responseData = await response.json();
-                
-                if (!response.ok) {
-                    throw new Error(responseData.error?.message || 'Unexpected API error.');
-                }
+                    const url = `https://generativelanguage.googleapis.com/v1beta/models/${currentInputParams.model}:generateContent?key=${apiKey}`;
+                    
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: promptText }] }],
+                            generationConfig: { responseMimeType: "application/json" }
+                        })
+                    });
+                    
+                    const responseData = await response.json();
+                    if (!response.ok) throw new Error(responseData.error?.message || 'Unexpected API error.');
 
-                const aiText = responseData.candidates[0]?.content?.parts[0]?.text;
-                if (!aiText) throw new Error("AI returned empty response.");
-                
-                const parsedData = JSON.parse(aiText);
+                    const aiText = responseData.candidates[0]?.content?.parts[0]?.text;
+                    if (!aiText) throw new Error("AI returned empty response.");
+                    parsedData = JSON.parse(aiText);
+
+                } else {
+                    // --- Backend/Flask Mode API Call ---
+                    const response = await fetch(`${activeBackendUrl}/generate`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(currentInputParams)
+                    });
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.error || 'Unexpected server error.');
+                    parsedData = data;
+                }
 
                 currentToneData = parsedData;
                 renderTone(parsedData);
@@ -603,8 +674,7 @@
                 errorMessage.textContent = "CRITICAL FAILURE: " + error.message;
                 errorMessage.classList.remove('hidden');
                 
-                // If it's an API Key issue, re-open modal automatically
-                if(error.message.includes("API key not valid") || error.message.includes("API key")) {
+                if(isStandaloneMode && (error.message.includes("API key not valid") || error.message.includes("API key"))) {
                     settingsModal.classList.remove('hidden');
                 }
             } finally {
@@ -614,90 +684,111 @@
             }
         });
 
-        // --- Save Tone Logic (Local Storage) ---
-        saveToneBtn.addEventListener('click', () => {
+        // --- Hybrid Save Tone Logic ---
+        saveToneBtn.addEventListener('click', async () => {
             if (!currentToneData || !currentInputParams) return;
 
             saveToneBtn.disabled = true;
             saveToneBtn.innerHTML = '<span class="animate-pulse">Saving...</span>';
 
-            const newTone = {
-                id: Date.now(),
+            const payload = {
                 music_style: currentInputParams.music_style,
                 guitar_type: currentInputParams.guitar_type,
                 pickup_type: currentInputParams.pickup_type,
-                tone_data: currentToneData,
-                created_at: new Date().toISOString()
+                tone_data: currentToneData
             };
 
             try {
-                let vault = JSON.parse(localStorage.getItem('guitarix_vault') || '[]');
-                vault.unshift(newTone); // Add to the beginning
-                localStorage.setItem('guitarix_vault', JSON.stringify(vault));
+                if (isStandaloneMode) {
+                    const newTone = { ...payload, id: Date.now(), created_at: new Date().toISOString() };
+                    let vault = JSON.parse(localStorage.getItem('guitarix_vault') || '[]');
+                    vault.unshift(newTone);
+                    localStorage.setItem('guitarix_vault', JSON.stringify(vault));
+                } else {
+                    const response = await fetch(`${activeBackendUrl}/save`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.error);
+                }
 
                 saveToneBtn.innerHTML = '✔️ Saved to Vault';
                 saveToneBtn.classList.replace('text-zinc-300', 'text-green-400');
-                
-                // Refresh Vault list
                 fetchVault();
+
             } catch (error) {
                 saveToneBtn.innerHTML = '❌ Save Failed';
                 saveToneBtn.disabled = false;
-                console.error("Local storage error:", error);
+                console.error("Save error:", error);
             }
         });
 
-        // --- Vault / Search Logic (Local Storage) ---
-        function fetchVault(query = '') {
+        // --- Hybrid Vault / Search Logic ---
+        async function fetchVault(query = '') {
             try {
-                let vault = JSON.parse(localStorage.getItem('guitarix_vault') || '[]');
+                let results = [];
                 
-                if (query) {
-                    const q = query.toLowerCase();
-                    vault = vault.filter(item => 
-                        item.music_style.toLowerCase().includes(q) || 
-                        item.guitar_type.toLowerCase().includes(q) || 
-                        item.pickup_type.toLowerCase().includes(q)
-                    );
+                if (isStandaloneMode) {
+                    // Local Storage Search
+                    results = JSON.parse(localStorage.getItem('guitarix_vault') || '[]');
+                    if (query) {
+                        const q = query.toLowerCase();
+                        results = results.filter(item => 
+                            item.music_style.toLowerCase().includes(q) || 
+                            item.guitar_type.toLowerCase().includes(q) || 
+                            item.pickup_type.toLowerCase().includes(q)
+                        );
+                    }
+                } else {
+                    // Server Backend Search
+                    const response = await fetch(`${activeBackendUrl}/search?q=${encodeURIComponent(query)}`);
+                    if (!response.ok) throw new Error("Failed to fetch vault");
+                    results = await response.json();
                 }
                 
                 vaultList.innerHTML = '';
-                if (vault.length === 0) {
+                if (results.length === 0) {
                     vaultList.innerHTML = `<div class="text-zinc-600 text-xs py-4 text-center font-bold uppercase tracking-widest">No rigs found.</div>`;
                     return;
                 }
 
-                vault.forEach(row => {
+                results.forEach(row => {
                     const item = document.createElement('div');
                     item.className = "p-3 bg-zinc-950 border border-zinc-800 rounded-sm cursor-pointer hover:border-zinc-600 hover:bg-zinc-800 transition-colors group relative";
                     
-                    // Add delete button inside item
                     item.innerHTML = `
                         <button class="delete-btn absolute right-2 top-2 text-zinc-600 hover:text-red-500 transition-colors" data-id="${row.id}" title="Delete Rig">✖</button>
                         <div class="font-bold text-amber-500 text-sm group-hover:text-amber-400 truncate pr-6">${row.music_style}</div>
                         <div class="text-[10px] text-zinc-500 uppercase tracking-widest mt-1">${row.guitar_type} • ${row.pickup_type}</div>
                     `;
                     
-                    // Delete logic
                     const deleteBtn = item.querySelector('.delete-btn');
-                    deleteBtn.addEventListener('click', (e) => {
-                        e.stopPropagation(); // Prevent loading the tone when clicking delete
+                    deleteBtn.addEventListener('click', async (e) => {
+                        e.stopPropagation();
                         if (confirm(`Delete "${row.music_style}" from vault?`)) {
-                            let updatedVault = JSON.parse(localStorage.getItem('guitarix_vault') || '[]');
-                            updatedVault = updatedVault.filter(v => v.id !== row.id);
-                            localStorage.setItem('guitarix_vault', JSON.stringify(updatedVault));
-                            fetchVault(searchInput.value);
+                            if (isStandaloneMode) {
+                                let updatedVault = JSON.parse(localStorage.getItem('guitarix_vault') || '[]');
+                                updatedVault = updatedVault.filter(v => v.id !== row.id);
+                                localStorage.setItem('guitarix_vault', JSON.stringify(updatedVault));
+                                fetchVault(searchInput.value);
+                            } else {
+                                try {
+                                    await fetch(`${activeBackendUrl}/delete/${row.id}`, { method: 'DELETE' });
+                                    fetchVault(searchInput.value);
+                                } catch (err) {
+                                    console.error("Failed to delete from server", err);
+                                }
+                            }
                         }
                     });
 
-                    // Click to load
                     item.addEventListener('click', () => {
-                        // Update UI form to match loaded data
                         document.getElementById('guitarType').value = row.guitar_type;
                         document.getElementById('pickupType').value = row.pickup_type;
                         document.getElementById('musicStyle').value = row.music_style;
                         
-                        // Set current state
                         currentInputParams = {
                             guitar_type: row.guitar_type,
                             pickup_type: row.pickup_type,
@@ -705,38 +796,30 @@
                         };
                         currentToneData = row.tone_data;
 
-                        // Hide empty state, load results
                         emptyState.classList.add('hidden');
-                        
-                        // Disable save button since it's already saved
                         saveToneBtn.innerHTML = '✔️ Saved to Vault';
                         saveToneBtn.disabled = true;
                         saveToneBtn.classList.replace('text-zinc-300', 'text-green-400');
 
-                        // Render
                         renderTone(row.tone_data);
-                        
-                        // Scroll to results
                         document.getElementById('resultsArea').scrollIntoView({ behavior: 'smooth' });
                     });
 
                     vaultList.appendChild(item);
                 });
             } catch (error) {
-                console.error("Failed to fetch vault from local storage:", error);
+                console.error("Failed to fetch vault:", error);
+                vaultList.innerHTML = `<div class="text-red-500 text-xs py-4 text-center font-bold uppercase tracking-widest">Error loading vault.</div>`;
             }
         }
 
         searchBtn.addEventListener('click', () => fetchVault(searchInput.value));
-        searchInput.addEventListener('input', (e) => {
-            fetchVault(searchInput.value); // Live search filtering locally
+        searchInput.addEventListener('input', () => {
+            fetchVault(searchInput.value);
         });
 
-        // Basic PWA Service Worker Registration (Stub)
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                // In a real environment, you'd link to your actual sw.js file here
-                // navigator.serviceWorker.register('/sw.js');
                 console.log('PWA Service Worker ready to be registered.');
             });
         }
